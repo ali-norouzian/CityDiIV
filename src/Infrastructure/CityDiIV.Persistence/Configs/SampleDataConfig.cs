@@ -10,5 +10,6 @@ public class SampleDataConfig : IEntityTypeConfiguration<SampleData>
     {
         builder.ToTable(nameof(SampleData), "Data");
         builder.Property(e => e.SampleString).HasMaxLength(1000).IsRequired();
+        builder.Property(e => e.SampleDecimal).HasColumnType("decimal(10,3)");
     }
 }
