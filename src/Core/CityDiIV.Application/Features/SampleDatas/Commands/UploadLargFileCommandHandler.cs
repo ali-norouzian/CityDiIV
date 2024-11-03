@@ -3,7 +3,6 @@ using CityDiIV.Domain.Contracts.Persistence;
 using CityDiIV.Domain.Entities;
 using Mediator;
 using Microsoft.Net.Http.Headers;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace CityDiIV.Application.Features.SampleDatas.Commands;
@@ -18,6 +17,9 @@ public class UploadLargFileCommandHandler : IRequestHandler<UploadLargFileComman
 
     public async ValueTask<bool> Handle(UploadLargFileCommand request, CancellationToken cancellationToken)
     {
+        var sw = new Stopwatch();
+        sw.Start();
+
         var section = await request.reader.ReadNextSectionAsync();
 
         const int maxLinesPerBatch = 1_000;
@@ -62,16 +64,23 @@ public class UploadLargFileCommandHandler : IRequestHandler<UploadLargFileComman
             section = await request.reader.ReadNextSectionAsync();
         }
 
+        Console.WriteLine($"Time taken (ReadFile): {sw.Elapsed}");
+        sw.Restart();
+
+        // Inserting entire data (call it depend of your memory prefer)
+        await _uow.BulkInsert();
+
+        sw.Stop();
+        Console.WriteLine($"Time taken (SQL insert): {sw.Elapsed}");
+
+
         return true;
     }
 
 
     private async Task SaveData(List<string> csvData)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-
-        var sampleDataList = new ConcurrentBag<SampleData>();
+        //var sampleDataList = new ConcurrentBag<SampleData>();
         Parallel.ForEach(csvData,
             new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
             row =>
@@ -80,7 +89,7 @@ public class UploadLargFileCommandHandler : IRequestHandler<UploadLargFileComman
 
                 try
                 {
-                    sampleDataList.Add(new()
+                    _uow.InsertBulkBag.Add(new SampleData
                     {
                         SampleInt = Convert.ToInt32(data[1]),
                         SampleDecimal = Convert.ToDecimal(data[2]),
@@ -94,12 +103,10 @@ public class UploadLargFileCommandHandler : IRequestHandler<UploadLargFileComman
 
             });
 
-        var repo = _uow.GetRepository<SampleData>();
-        await repo.Add(sampleDataList.ToList());
-        await _uow.SaveChanges();
+        //var repo = _uow.GetRepository<SampleData>();
+        //await repo.Add(sampleDataList.ToList());
+        //await _uow.SaveChanges();
 
-        sw.Stop();
-        Console.WriteLine($"Time taken: {sw.Elapsed}");
     }
 
 }
