@@ -1,3 +1,6 @@
+using CityDiIV.Application;
+using CityDiIV.Persistence;
+
 namespace CityDiIV.Api;
 
 public class Program
@@ -7,6 +10,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
+        builder.Services.AddPersistence()
+                        .AddApplication();
 
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -19,7 +24,7 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI();
 
-        app.UseAuthorization();
+        //app.UseAuthorization();
 
         app.MapControllers();
 

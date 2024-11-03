@@ -11,4 +11,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\CityDiIV.Application\CityDiIV.Application.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\CityDiIV.Persistence\CityDiIV.Persistence.csproj" />
+  </ItemGroup>
+
 </Project>
