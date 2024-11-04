@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Large File Upload</title>
+</head>
+<body>
+    <h2>Upload Large File</h2>
+    <hr/>
+    <div class="progress">
+        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+    </div>
+
+    <!-- Interactive Counter -->
+    <div id="clickCounter">Clicks: 0</div>
+    <button onclick="incrementCounter()">Click Me</button>
+
+    <hr />
+
+    <form id="uploadForm">
+        <input type="file" id="fileInput" name="file" required>
+        <button type="submit">Upload File</button>
+    </form>
+    <div id="status"></div>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const fileInput = document.getElementById("fileInput");
+            if (fileInput.files.length === 0) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const progressBar = document.getElementById("progressBar");
+
+            // Use FileReader to read the file as text
+            const reader = new FileReader();
+
+            reader.onload = async function (e) {
+                const fileText = e.target.result;
+                const lines = fileText.split(/\r?\n/); // Split by line breaks
+                const batchSize = 1000; // Number of lines per batch
+                const totalBatches = Math.ceil(lines.length / batchSize);
+                let uploadedBatches = 0;
+
+                const formData = new FormData();
+
+                // Create parts within the FormData object for each batch
+                for (let i = 0; i < lines.length; i += batchSize) {
+                    const lineBatch = lines.slice(i, i + batchSize).join("\n");
+
+                    // Create a blob from each batch and append to FormData as a separate part
+                    const blob = new Blob([lineBatch], { type: "text/plain" });
+                    formData.append(`filePart_${i / batchSize}`, blob, `${file.name}_part${i / batchSize}`);
+
+                    // Update progress as we prepare each batch
+                    uploadedBatches += 1;
+                    const progressPercentage = Math.round((uploadedBatches / totalBatches) * 100);
+                    progressBar.style.width = `${progressPercentage}%`;
+                    progressBar.textContent = `${progressPercentage}%`;
+                }
+
+                // Send all parts in a single HTTP request
+                try {
+                    const response = await fetch("api/UploadLargeFile", {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const statusDiv = document.getElementById("status");
+                    if (response.ok) {
+                        statusDiv.innerText = "File uploaded successfully!";
+                    } else {
+                        const errorText = await response.text();
+                        statusDiv.innerText = `Failed to upload file: ${errorText}`;
+                    }
+                } catch (error) {
+                    console.error("Upload error:", error);
+                    document.getElementById("status").innerText = "An error occurred during file upload.";
+                }
+            };
+
+            reader.onerror = function (error) {
+                console.error("Error reading file:", error);
+                document.getElementById("status").innerText = "An error occurred while reading the file.";
+            };
+
+            reader.readAsText(file); // Start reading the file
+        });
+
+
+        // Interactive counter to show page responsiveness
+        let clickCount = 0;
+        function incrementCounter() {
+            clickCount++;
+            document.getElementById("clickCounter").innerText = `Clicks: ${clickCount}`;
+        }
+
+    </script>
+</body>
+</html>

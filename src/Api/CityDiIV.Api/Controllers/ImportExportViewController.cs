@@ -4,7 +4,8 @@ namespace CityDiIV.Api.Controllers
 {
     public class ImportExportViewController : Controller
     {
-        public IActionResult Index()
+        [HttpGet("upload")]
+        public IActionResult UploadLargeFile()
         {
             return View();
         }

@@ -9,7 +9,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace CityDiIV.Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("api")]
 [ApiController]
 public class ImportExportApiController : ControllerBase
 {

@@ -11,6 +11,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Services.AddControllersWithViews();
+
         // Configure Kestrel server to handle large file uploads
         builder.WebHost.ConfigureKestrel(serverOptions =>
         {
@@ -44,6 +46,7 @@ public class Program
 
         //app.UseAuthorization();
 
+        app.UseRouting();
         app.MapControllers();
 
         await app.RunAsync();
